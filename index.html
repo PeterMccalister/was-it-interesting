@@ -4,79 +4,108 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Was It Interesting? - F1</title>
+    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Supabase JS Client CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
-<body class="bg-slate-900 text-white min-p-6">
+<body class="bg-slate-900 text-white min-h-screen p-6">
     <div class="max-w-4xl mx-auto p-6">
-        <h1 class="text-3xl font-bold mb-4">Was It Interesting? 🏎️</h1>
+        <header class="mb-8">
+            <h1 class="text-3xl font-bold tracking-tight">Was It Interesting? 🏎️</h1>
+            <p class="text-slate-400 text-sm mt-1">Spoiler-free F1 race recommendations</p>
+        </header>
         
         <!-- Dropdown for Races -->
-        <div class="mb-6">
-            <label class="block text-sm font-medium mb-2">Select Grand Prix:</label>
-            <select id="raceSelect" class="bg-slate-800 border border-slate-700 rounded p-2 text-white w-full">
+        <div class="mb-6 bg-slate-800 p-4 rounded-xl border border-slate-700 shadow-lg">
+            <label for="raceSelect" class="block text-sm font-medium mb-2 text-slate-300">Select Grand Prix:</label>
+            <select id="raceSelect" class="bg-slate-900 border border-slate-700 rounded-lg p-3 text-white w-full focus:outline-none focus:border-blue-500 transition-colors">
                 <option>Loading races from database...</option>
             </select>
         </div>
 
         <!-- Display Box -->
-        <div class="bg-slate-800 p-6 rounded-lg border border-slate-700">
-            <h2 id="raceTitle" class="text-xl font-semibold mb-2">Select a race</h2>
-            <p class="text-lg">WII Score: <span id="wiiScoreDisplay" class="font-bold text-green-400">-</span></p>
-            <p class="text-md">Recommendation: <span id="recommendationDisplay" class="font-semibold text-amber-400">-</span></p>
+        <div class="bg-slate-800 p-6 rounded-xl border border-slate-700 shadow-lg">
+            <h2 id="raceTitle" class="text-2xl font-bold mb-4 text-blue-400">Select a race</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="bg-slate-900 p-4 rounded-lg border border-slate-800">
+                    <p class="text-sm text-slate-400">WII Score</p>
+                    <p class="text-3xl font-extrabold mt-1"><span id="wiiScoreDisplay" class="text-green-400">-</span><span class="text-sm text-slate-500 font-normal"> / 10</span></p>
+                </div>
+                <div class="bg-slate-900 p-4 rounded-lg border border-slate-800">
+                    <p class="text-sm text-slate-400">Recommendation</p>
+                    <p id="recommendationDisplay" class="text-lg font-semibold mt-2 text-amber-400">-</p>
+                </div>
+            </div>
         </div>
     </div>
 
+    <!-- Application Script -->
     <script>
-        // Initialize Supabase safely
-        const SUPABASE_URL = 'https://ultrinfqyvqbiifzumem.supabase.co';
-        const SUPABASE_ANON_KEY = 'sb_publishable_zTNiZYTDu-M18dMO6ZC3tQ_pLjxomqW';
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-        let racesData = [];
-
-        async function loadRacesFromSupabase() {
-            const { data, error } = await supabase.from('races').select('*');
-            if (error) {
-                console.error('Error fetching data:', error);
-                return;
-            }
-            racesData = data;
-            console.log("Fetched races successfully:", racesData);
+        (function() {
+            const SUPABASE_URL = 'https://ultrinfqyvqbiifzumem.supabase.co';
+            const SUPABASE_ANON_KEY = 'sb_publishable_zTNiZYTDu-M18dMO6ZC3tQ_pLjxomqW';
             
-            if (racesData.length > 0) {
-                populateUI(racesData);
+            // Isolated Supabase client initialization
+            const f1Db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+            let racesData = [];
+
+            async function loadRacesFromSupabase() {
+                const { data, error } = await f1Db.from('races').select('*');
+                if (error) {
+                    console.error('Error fetching data:', error);
+                    const selectEl = document.getElementById('raceSelect');
+                    if (selectEl) selectEl.innerHTML = '<option>Error loading database data</option>';
+                    return;
+                }
+                
+                racesData = data || [];
+                console.log("Fetched races successfully:", racesData);
+                
+                if (racesData.length > 0) {
+                    populateUI(racesData);
+                } else {
+                    const selectEl = document.getElementById('raceSelect');
+                    if (selectEl) selectEl.innerHTML = '<option>No races found in database</option>';
+                }
             }
-        }
 
-        function populateUI(races) {
-            const selectEl = document.getElementById('raceSelect');
-            selectEl.innerHTML = '';
-            
-            races.forEach(race => {
-                const opt = document.createElement('option');
-                opt.value = race.id;
-                opt.textContent = race.title;
-                selectEl.appendChild(opt);
-            });
+            function populateUI(races) {
+                const selectEl = document.getElementById('raceSelect');
+                if (!selectEl) return;
+                selectEl.innerHTML = '';
+                
+                races.forEach(race => {
+                    const opt = document.createElement('option');
+                    opt.value = race.id;
+                    opt.textContent = race.title;
+                    selectEl.appendChild(opt);
+                });
 
-            // Show first race details by default
-            displayRace(races[0]);
+                // Show first race details by default
+                displayRace(races[0]);
 
-            // Listen for changes
-            selectEl.addEventListener('change', (e) => {
-                const selected = races.find(r => r.id === e.target.value);
-                if (selected) displayRace(selected);
-            });
-        }
+                // Listen for user changes in dropdown
+                selectEl.addEventListener('change', (e) => {
+                    const selected = races.find(r => r.id === e.target.value);
+                    if (selected) displayRace(selected);
+                });
+            }
 
-        function displayRace(race) {
-            document.getElementById('raceTitle').textContent = race.title;
-            document.getElementById('wiiScoreDisplay').textContent = race.wii_score;
-            document.getElementById('recommendationDisplay').textContent = race.recommendation;
-        }
+            function displayRace(race) {
+                const titleEl = document.getElementById('raceTitle');
+                const scoreEl = document.getElementById('wiiScoreDisplay');
+                const recEl = document.getElementById('recommendationDisplay');
+                
+                if (titleEl) titleEl.textContent = race.title || 'Grand Prix';
+                if (scoreEl) scoreEl.textContent = race.wii_score || '-';
+                if (recEl) recEl.textContent = race.recommendation || 'No recommendation available';
+            }
 
-        window.addEventListener('DOMContentLoaded', loadRacesFromSupabase);
+            // Run when page content is fully loaded
+            window.addEventListener('DOMContentLoaded', loadRacesFromSupabase);
+        })();
     </script>
 </body>
 </html>
