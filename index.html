@@ -1,743 +1,82 @@
 <!DOCTYPE html>
 <html lang="en" class="dark">
 <head>
-<script src='https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2'></script>
-    <script>
-    // Initialize Supabase
-    const SUPABASE_URL = 'https://ultrinfqyvqbiifzumem.supabase.co'; // Paste your Supabase Project URL
-    const SUPABASE_ANON_KEY = 'sb_publishable_zTNiZYTDu-M18dMO6ZC3tQ_pLjxomqW'; // Paste your Publishable key
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-    // Global variable for races
-    let racesData = {};
-
-    // Fetch races from Supabase table
-    async function loadRacesFromSupabase() {
-        const { data, error } = await supabase.from('races').select('*');
-        if (error) {
-            console.error('Error fetching data:', error);
-            return;
-        }
-        console.log("Fetched races:", data);
-        // If your database returns data, pass it to your UI rendering function here
-    }
-
-    // Run when page loads
-    window.addEventListener('DOMContentLoaded', loadRacesFromSupabase);
-</script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Was It Interesting? (WII) - F1 Edition</title>
+    <title>Was It Interesting? - F1</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: {
-                        f1: {
-                            red: '#E10600',
-                            dark: '#0D0D12',
-                            card: '#161622',
-                            cardHover: '#1D1D2C',
-                            border: '#28283A',
-                            neon: '#00F0FF',
-                            gold: '#FFB800',
-                            accent: '#FF3366'
-                        }
-                    },
-                    fontFamily: {
-                        sans: ['Inter', 'system-ui', 'sans-serif']
-                    }
-                }
-            }
-        }
-    </script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #08080C;
-            color: #F1F5F9;
-        }
-        .glow-red {
-            box-shadow: 0 0 30px rgba(225, 6, 0, 0.15);
-        }
-        .badge-glow-emerald {
-            box-shadow: 0 0 15px rgba(16, 185, 129, 0.25);
-        }
-        .badge-glow-amber {
-            box-shadow: 0 0 15px rgba(245, 158, 11, 0.25);
-        }
-        .badge-glow-rose {
-            box-shadow: 0 0 15px rgba(244, 63, 94, 0.25);
-        }
-        ::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #0D0D12;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #28283A;
-            border-radius: 4px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #E10600;
-        }
-    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
-<body class="min-h-screen flex flex-col justify-between selection:bg-f1-red selection:text-white pb-12">
-
-    <!-- Navigation Header -->
-    <header class="sticky top-0 z-50 bg-f1-dark/95 backdrop-blur-md border-b border-f1-border">
-        <div class="max-w-6xl mx-auto px-4 py-3.5 flex items-center justify-between">
-            <div class="flex items-center gap-3">
-                <div class="bg-f1-red text-white px-3 py-2 rounded-xl font-black text-xl tracking-wider shadow-md flex items-center gap-1.5">
-                    <i data-lucide="gauge" class="w-6 h-6"></i>
-                    <span>WII</span>
-                </div>
-                <div>
-                    <h1 class="font-extrabold text-lg tracking-tight text-white flex items-center gap-2">
-                        Was It Interesting?
-                        <span class="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-md bg-f1-red/20 text-f1-red border border-f1-red/30">F1 Edition</span>
-                    </h1>
-                    <p class="text-xs text-gray-400">Post-Race Spoiler-Free Recommendation Engine</p>
-                </div>
-            </div>
-
-            <!-- Season Selector Tabs -->
-            <div class="flex items-center bg-f1-card p-1 rounded-xl border border-f1-border text-xs font-semibold">
-                <button id="season-2026-btn" onclick="switchSeason('2026')" class="px-3 py-1.5 rounded-lg bg-f1-red text-white transition shadow-sm">
-                    2026 Season
-                </button>
-                <button id="season-2025-btn" onclick="switchSeason('2025')" class="px-3 py-1.5 rounded-lg text-gray-400 hover:text-white transition">
-                    2025 Season
-                </button>
-            </div>
-        </div>
-    </header>
-
-    <!-- Main Content Container -->
-    <main class="max-w-6xl mx-auto px-4 py-6 w-full space-y-6">
-
-        <!-- Spoiler Protection Banner -->
-        <div class="bg-emerald-950/40 border border-emerald-500/30 rounded-2xl p-3.5 px-5 flex items-center justify-between flex-wrap gap-3">
-            <div class="flex items-center gap-3">
-                <div class="p-2 bg-emerald-500/20 text-emerald-400 rounded-xl">
-                    <i data-lucide="shield-check" class="w-5 h-5"></i>
-                </div>
-                <div>
-                    <h3 class="text-xs font-bold text-emerald-300 uppercase tracking-wider">100% Spoiler Protection Mode Active</h3>
-                    <p class="text-xs text-gray-300">Driver names, team standings, podium order, and exact lap outcomes are strictly omitted.</p>
-                </div>
-            </div>
-            <span class="text-[11px] font-mono text-emerald-400 bg-emerald-900/50 px-2.5 py-1 rounded-md border border-emerald-500/20">
-                VERIFIED SPOILER-FREE
-            </span>
+<body class="bg-slate-900 text-white min-p-6">
+    <div class="max-w-4xl mx-auto p-6">
+        <h1 class="text-3xl font-bold mb-4">Was It Interesting? 🏎️</h1>
+        
+        <!-- Dropdown for Races -->
+        <div class="mb-6">
+            <label class="block text-sm font-medium mb-2">Select Grand Prix:</label>
+            <select id="raceSelect" class="bg-slate-800 border border-slate-700 rounded p-2 text-white w-full">
+                <option>Loading races from database...</option>
+            </select>
         </div>
 
-        <!-- Event & Session Selector Bar -->
-        <section class="bg-f1-card rounded-2xl p-5 border border-f1-border shadow-xl">
-            <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
-                
-                <!-- Grand Prix Dropdown -->
-                <div class="md:col-span-7">
-                    <label class="block text-xs font-bold uppercase tracking-wider text-gray-400 mb-1.5 flex items-center gap-1.5">
-                        <i data-lucide="map-pin" class="w-3.5 h-3.5 text-f1-red"></i> Select Grand Prix Event
-                    </label>
-                    <select id="event-select" onchange="onEventOrSessionChange()" class="w-full bg-f1-dark text-white font-medium rounded-xl border border-f1-border px-4 py-3 focus:outline-none focus:border-f1-red transition cursor-pointer text-sm">
-                        <!-- Populated dynamically via JavaScript -->
-                    </select>
-                </div>
-
-                <!-- Session Switcher Tabs (Race, Sprint, Qualifying) -->
-                <div class="md:col-span-5">
-                    <label class="block text-xs font-bold uppercase tracking-wider text-gray-400 mb-1.5 flex items-center gap-1.5">
-                        <i data-lucide="flag" class="w-3.5 h-3.5 text-f1-neon"></i> Session Type
-                    </label>
-                    <div id="session-tabs" class="grid grid-cols-3 gap-1 bg-f1-dark p-1 rounded-xl border border-f1-border text-xs font-bold text-center">
-                        <button id="session-btn-race" onclick="selectSession('Race')" class="py-2.5 rounded-lg bg-f1-red text-white transition">
-                            Race
-                        </button>
-                        <button id="session-btn-sprint" onclick="selectSession('Sprint')" class="py-2.5 rounded-lg text-gray-400 hover:text-white transition">
-                            Sprint
-                        </button>
-                        <button id="session-btn-qualifying" onclick="selectSession('Qualifying')" class="py-2.5 rounded-lg text-gray-400 hover:text-white transition">
-                            Qualifying
-                        </button>
-                    </div>
-                </div>
-
-            </div>
-        </section>
-
-        <!-- Post-Race Recommendation Dashboard -->
-        <section id="display-dashboard" class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            
-            <!-- Hero Rating & Format Recommendation Card (5 Columns) -->
-            <div class="lg:col-span-5 bg-f1-card rounded-2xl p-6 border border-f1-border flex flex-col justify-between glow-red relative overflow-hidden">
-                <div class="absolute -right-16 -bottom-16 w-56 h-56 bg-f1-red/10 rounded-full blur-3xl pointer-events-none"></div>
-
-                <div>
-                    <!-- Event Title Header -->
-                    <div class="flex justify-between items-start mb-4">
-                        <div>
-                            <div class="flex items-center gap-2 mb-1">
-                                <span id="event-season-badge" class="text-[10px] font-bold uppercase tracking-widest text-f1-red bg-f1-red/10 px-2 py-0.5 rounded border border-f1-red/20">
-                                    2026 Season
-                                </span>
-                                <span id="event-session-badge" class="text-[10px] font-bold uppercase tracking-widest text-f1-neon bg-f1-neon/10 px-2 py-0.5 rounded border border-f1-neon/20">
-                                    Main Race
-                                </span>
-                            </div>
-                            <h2 id="event-title" class="text-2xl md:text-3xl font-black text-white tracking-tight">Bahrain Grand Prix</h2>
-                            <p id="event-circuit" class="text-xs text-gray-400 flex items-center gap-1 mt-1">
-                                <i data-lucide="compass" class="w-3.5 h-3.5 text-gray-500"></i> Bahrain International Circuit
-                            </p>
-                        </div>
-                        <span id="event-date" class="text-xs font-semibold text-gray-400 bg-f1-dark px-2.5 py-1 rounded-md border border-f1-border shrink-0">
-                            Mar 02
-                        </span>
-                    </div>
-
-                    <!-- WII Rating Score Display -->
-                    <div class="my-6 p-6 rounded-2xl bg-f1-dark/90 border border-f1-border text-center relative">
-                        <span class="text-[11px] font-bold tracking-widest text-gray-400 uppercase block mb-1">Overall WII Score</span>
-                        <div class="flex items-center justify-center gap-2">
-                            <i data-lucide="star" class="w-8 h-8 text-amber-400 fill-amber-400"></i>
-                            <span id="wii-score" class="text-5xl md:text-6xl font-black text-white tracking-tight">8.7</span>
-                            <span class="text-xl text-gray-500 font-bold self-end mb-1">/10</span>
-                        </div>
-                        
-                        <!-- Excitement Badge -->
-                        <div class="mt-3.5">
-                            <span id="excitement-badge" class="px-4 py-1.5 rounded-full text-xs font-extrabold uppercase tracking-wider bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 badge-glow-emerald">
-                                Instant Classic
-                            </span>
-                        </div>
-                    </div>
-
-                    <!-- Viewing Format Recommendation Card -->
-                    <div class="space-y-2">
-                        <span class="text-xs font-bold uppercase tracking-wider text-gray-400 block">Recommended Viewing Format</span>
-                        <div id="recommendation-card" class="p-4 rounded-xl bg-f1-red/15 border border-f1-red/40 flex items-center gap-3.5">
-                            <div id="recommendation-icon" class="p-3 rounded-xl bg-f1-red text-white shadow-lg shrink-0">
-                                <i data-lucide="tv" class="w-6 h-6"></i>
-                            </div>
-                            <div>
-                                <h3 id="recommendation-tag" class="font-extrabold text-white text-base">Must-Watch Full Race</h3>
-                                <p id="recommendation-desc" class="text-xs text-gray-300 mt-0.5 leading-relaxed">High tension throughout with non-stop battles. Do not skip.</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Community Consensus & Voting Section -->
-                <div class="mt-6 pt-5 border-t border-f1-border">
-                    <div class="flex items-center justify-between text-xs text-gray-400 mb-2.5">
-                        <span>Community Consensus:</span>
-                        <span id="community-rate" class="font-bold text-emerald-400">89% Agree (1,240 votes)</span>
-                    </div>
-                    <div class="grid grid-cols-2 gap-2">
-                        <button onclick="castVote('agree')" id="btn-agree" class="flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-f1-dark hover:bg-emerald-500/20 hover:text-emerald-400 text-gray-300 text-xs font-semibold border border-f1-border transition">
-                            <i data-lucide="thumbs-up" class="w-4 h-4"></i>
-                            <span>Agree</span>
-                        </button>
-                        <button onclick="castVote('disagree')" id="btn-disagree" class="flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-f1-dark hover:bg-rose-500/20 hover:text-rose-400 text-gray-300 text-xs font-semibold border border-f1-border transition">
-                            <i data-lucide="thumbs-down" class="w-4 h-4"></i>
-                            <span>Disagree</span>
-                        </button>
-                    </div>
-                    <p id="vote-thanks" class="text-[11px] text-center text-gray-500 mt-2 hidden">Thanks for contributing to community consensus!</p>
-                </div>
-
-            </div>
-
-            <!-- Factor Breakdown & Spoiler-Free Verdict (7 Columns) -->
-            <div class="lg:col-span-7 bg-f1-card rounded-2xl p-6 border border-f1-border flex flex-col justify-between">
-                <div>
-                    <div class="flex items-center justify-between mb-4 pb-3 border-b border-f1-border">
-                        <h3 class="font-extrabold text-lg text-white flex items-center gap-2">
-                            <i data-lucide="sliders" class="w-5 h-5 text-f1-neon"></i>
-                            Spoiler-Free Factor Breakdown
-                        </h3>
-                        <span class="text-xs text-gray-400 font-mono">POST-RACE DATA</span>
-                    </div>
-
-                    <!-- Breakdown Factors Grid -->
-                    <div id="breakdown-container" class="space-y-3">
-                        <!-- Populated dynamically via JS -->
-                    </div>
-                </div>
-
-                <!-- Spoiler-Free Editorial Verdict -->
-                <div class="mt-6 p-4 rounded-xl bg-f1-dark/80 border border-f1-border relative">
-                    <div class="flex items-center gap-2 text-f1-neon mb-1.5">
-                        <i data-lucide="quote" class="w-4 h-4"></i>
-                        <h4 class="text-xs font-bold uppercase tracking-wider text-f1-neon">Editorial Spoiler-Free Verdict</h4>
-                    </div>
-                    <p id="event-verdict" class="text-xs text-gray-300 leading-relaxed italic">
-                        A chaotic wet-to-dry thriller with endless midfield wheel-to-wheel action and dramatic strategic gambles throughout the final stint.
-                    </p>
-                </div>
-            </div>
-
-        </section>
-
-    </main>
-
-    <!-- Footer -->
-    <footer class="max-w-6xl mx-auto px-4 mt-8 text-center text-xs text-gray-500">
-        <p>© 2026 Was It Interesting? (WII) • Built for motorsport fans everywhere.</p>
-        <p class="mt-1">Zero race results or standings are stored or displayed to preserve total spoiler immunity.</p>
-    </footer>
+        <!-- Display Box -->
+        <div class="bg-slate-800 p-6 rounded-lg border border-slate-700">
+            <h2 id="raceTitle" class="text-xl font-semibold mb-2">Select a race</h2>
+            <p class="text-lg">WII Score: <span id="wiiScoreDisplay" class="font-bold text-green-400">-</span></p>
+            <p class="text-md">Recommendation: <span id="recommendationDisplay" class="font-semibold text-amber-400">-</span></p>
+        </div>
+    </div>
 
     <script>
-        // Database of post-race data across seasons and sessions
-        const F1_DATABASE = {
-            "2026": [
-                {
-                    id: "2026-bahrain",
-                    gpName: "Bahrain Grand Prix",
-                    circuit: "Bahrain International Circuit",
-                    date: "Mar 02",
-                    sessions: {
-                        Race: {
-                            score: 8.7,
-                            badge: "Instant Classic",
-                            badgeColor: "emerald",
-                            recommendationTag: "Must-Watch Full Race",
-                            recommendationDesc: "High tension throughout with non-stop battles. Do not skip.",
-                            icon: "tv",
-                            community: "89% Agree (1,240 votes)",
-                            verdict: "A chaotic wet-to-dry thriller with endless midfield wheel-to-wheel action and dramatic strategic gambles throughout the final stint.",
-                            factors: [
-                                { name: "Overtakes Density", score: "8.8/10", detail: "Constant wheel-to-wheel position exchanges across multiple stint phases.", icon: "zap" },
-                                { name: "Weather Chaos", score: "9.0/10", detail: "Damp track transitions created split pit-window strategies.", icon: "cloud-rain" },
-                                { name: "Safety Car / VSC Drama", score: "7.5/10", detail: "Two late-session pack compressions setup a sprint finish.", icon: "siren" },
-                                { name: "Strategy & On-Track Battles", score: "8.5/10", detail: "Undercuts proved decisive with high compound delta variance.", icon: "crosshair" }
-                            ]
-                        },
-                        Sprint: {
-                            score: 7.4,
-                            badge: "Action Packed",
-                            badgeColor: "emerald",
-                            recommendationTag: "Watch Extended Highlights",
-                            recommendationDesc: "Fast-paced flat-out sprint with aggressive lap-one maneuvering.",
-                            icon: "play-circle",
-                            community: "81% Agree (640 votes)",
-                            verdict: "A lively short-form battle with relentless attacks into Turn 1 and minimal tire conservation.",
-                            factors: [
-                                { name: "Overtakes Density", score: "7.5/10", detail: "Frequent DRS slipstream passes along the main straight.", icon: "zap" },
-                                { name: "Weather Chaos", score: "1.0/10", detail: "Dry and consistent surface conditions.", icon: "sun" },
-                                { name: "Safety Car / VSC Drama", score: "6.0/10", detail: "Single virtual safety car neutralizations.", icon: "siren" },
-                                { name: "Strategy & On-Track Battles", score: "7.0/10", detail: "Single compound sprint with pure pace focus.", icon: "crosshair" }
-                            ]
-                        },
-                        Qualifying: {
-                            score: 9.1,
-                            badge: "Instant Classic",
-                            badgeColor: "emerald",
-                            recommendationTag: "Must-Watch Full Session",
-                            recommendationDesc: "One of the closest session margins in recent memory.",
-                            icon: "tv",
-                            community: "93% Agree (890 votes)",
-                            verdict: "An agonizingly close fight down to thousands of a second across Q1 through Q3.",
-                            factors: [
-                                { name: "Time Delta Tightness", score: "9.8/10", detail: "Top 10 separated by under three tenths of a second.", icon: "timer" },
-                                { name: "Track Evolution", score: "8.5/10", detail: "Rapid track rubbering in caused dramatic lap leaderboard shifts.", icon: "trending-up" },
-                                { name: "Traffic & Sector Drama", score: "7.0/10", detail: "Outlap jockeying led to intense sector 3 pressure.", icon: "users" },
-                                { name: "Unpredictability", score: "9.0/10", detail: "Multiple unexpected Q2 eliminations.", icon: "sparkles" }
-                            ]
-                        }
-                    }
-                },
-                {
-                    id: "2026-monaco",
-                    gpName: "Monaco Grand Prix",
-                    circuit: "Circuit de Monaco",
-                    date: "May 24",
-                    sessions: {
-                        Race: {
-                            score: 3.8,
-                            badge: "Skippable Procession",
-                            badgeColor: "rose",
-                            recommendationTag: "Short Highlights Only",
-                            recommendationDesc: "Highly processional race. Minimal on-track passing.",
-                            icon: "film",
-                            community: "94% Agree (2,110 votes)",
-                            verdict: "A dry processional affair where track position governed the outcome entirely. Safe to catch quick highlights.",
-                            factors: [
-                                { name: "Overtakes Density", score: "1.5/10", detail: "Extremely low passing rate throughout the distance.", icon: "zap" },
-                                { name: "Weather Chaos", score: "1.0/10", detail: "Clear skies and stable track temperatures.", icon: "sun" },
-                                { name: "Safety Car / VSC Drama", score: "3.0/10", detail: "Brief virtual safety car intervention.", icon: "siren" },
-                                { name: "Strategy & On-Track Battles", score: "4.0/10", detail: "Management-focused pace with zero pit window surprises.", icon: "crosshair" }
-                            ]
-                        },
-                        Qualifying: {
-                            score: 9.6,
-                            badge: "Instant Classic",
-                            badgeColor: "emerald",
-                            recommendationTag: "Must-Watch Full Session",
-                            recommendationDesc: "Peak modern F1 wall-scraping intensity.",
-                            icon: "tv",
-                            community: "97% Agree (3,100 votes)",
-                            verdict: "Breathtaking precision on display. Final Q3 runs were absolutely electric.",
-                            factors: [
-                                { name: "Time Delta Tightness", score: "9.9/10", detail: "Pole decided by mere thousandths of a second.", icon: "timer" },
-                                { name: "Track Evolution", score: "9.2/10", detail: "Massive grip gains on every progressive flying lap.", icon: "trending-up" },
-                                { name: "Traffic & Sector Drama", score: "8.5/10", detail: "High stress traffic management in Rascasse and Sector 1.", icon: "users" },
-                                { name: "Unpredictability", score: "9.1/10", detail: "Yellow flags disrupted late attempts in Q2.", icon: "sparkles" }
-                            ]
-                        }
-                    }
-                },
-                {
-                    id: "2026-silverstone",
-                    gpName: "British Grand Prix",
-                    circuit: "Silverstone Circuit",
-                    date: "Jul 05",
-                    sessions: {
-                        Race: {
-                            score: 9.4,
-                            badge: "Instant Classic",
-                            badgeColor: "emerald",
-                            recommendationTag: "Must-Watch Full Race",
-                            recommendationDesc: "Masterclass race with non-stop action across the entire grid.",
-                            icon: "tv",
-                            community: "96% Agree (3,450 votes)",
-                            verdict: "An absolute masterpiece. Changing track conditions forced driver adaptability and yielded constant position changes.",
-                            factors: [
-                                { name: "Overtakes Density", score: "9.5/10", detail: "Wheel-to-wheel duels through legendary high-speed turns.", icon: "zap" },
-                                { name: "Weather Chaos", score: "9.2/10", detail: "Mixed conditions required slick/inter crossover calls.", icon: "cloud-rain" },
-                                { name: "Safety Car / VSC Drama", score: "8.0/10", detail: "Late Safety Car setup a sprint finish to the line.", icon: "siren" },
-                                { name: "Strategy & On-Track Battles", score: "9.0/10", detail: "Three distinct strategic options were viable.", icon: "crosshair" }
-                            ]
-                        },
-                        Qualifying: {
-                            score: 8.2,
-                            badge: "Action Packed",
-                            badgeColor: "emerald",
-                            recommendationTag: "Watch Extended Highlights",
-                            recommendationDesc: "Damp conditions added immense suspense to Q1 and Q2.",
-                            icon: "play-circle",
-                            community: "88% Agree (1,120 votes)",
-                            verdict: "Drying track conditions kept the leaderboard in constant flux until the final flag.",
-                            factors: [
-                                { name: "Time Delta Tightness", score: "8.0/10", detail: "Tight gap across top three teams.", icon: "timer" },
-                                { name: "Track Evolution", score: "9.5/10", detail: "Track dried rapidly requiring slick tires in Q3.", icon: "trending-up" },
-                                { name: "Traffic & Sector Drama", score: "7.5/10", detail: "High traffic outlaps into Stowe corner.", icon: "users" },
-                                { name: "Unpredictability", score: "8.0/10", detail: "Surprise Q1 eliminations due to damp patches.", icon: "sparkles" }
-                            ]
-                        }
-                    }
-                },
-                {
-                    id: "2026-spa",
-                    gpName: "Belgian Grand Prix",
-                    circuit: "Circuit de Spa-Francorchamps",
-                    date: "Jul 26",
-                    sessions: {
-                        Race: {
-                            score: 7.6,
-                            badge: "Decent Race",
-                            badgeColor: "amber",
-                            recommendationTag: "Watch Extended Highlights",
-                            recommendationDesc: "Solid racing with strong highlights moments.",
-                            icon: "play-circle",
-                            community: "84% Agree (980 votes)",
-                            verdict: "A solid race featuring powerful straight-line overtakes at Kemmel and intriguing tire degradation differential.",
-                            factors: [
-                                { name: "Overtakes Density", score: "7.8/10", detail: "Steady stream of DRS assisted passes.", icon: "zap" },
-                                { name: "Weather Chaos", score: "5.0/10", detail: "Overcast with threat of rain that never materialized.", icon: "cloud" },
-                                { name: "Safety Car / VSC Drama", score: "6.0/10", detail: "Single SC early on to clear debris.", icon: "siren" },
-                                { name: "Strategy & On-Track Battles", score: "8.0/10", detail: "Tire wear differential produced late-race closing gaps.", icon: "crosshair" }
-                            ]
-                        }
-                    }
-                },
-                {
-                    id: "2026-interlagos",
-                    gpName: "São Paulo Grand Prix",
-                    circuit: "Autódromo José Carlos Pace",
-                    date: "Nov 08",
-                    sessions: {
-                        Race: {
-                            score: 9.2,
-                            badge: "Instant Classic",
-                            badgeColor: "emerald",
-                            recommendationTag: "Must-Watch Full Race",
-                            recommendationDesc: "Classic Interlagos drama. Do not skip a single lap.",
-                            icon: "tv",
-                            community: "92% Agree (1,890 votes)",
-                            verdict: "Interlagos delivered pure drama once again. High overtake count paired with erratic rainfall created a dramatic classic.",
-                            factors: [
-                                { name: "Overtakes Density", score: "9.0/10", detail: "Multi-car duels into Senna S consistently.", icon: "zap" },
-                                { name: "Weather Chaos", score: "9.5/10", detail: "Sudden rain burst mid-race turned strategy upside down.", icon: "cloud-rain" },
-                                { name: "Safety Car / VSC Drama", score: "8.5/10", detail: "Multiple Virtual Safety Cars and full SC intervention.", icon: "siren" },
-                                { name: "Strategy & On-Track Battles", score: "8.9/10", detail: "High pit stop frequency and varied compound choices.", icon: "crosshair" }
-                            ]
-                        },
-                        Sprint: {
-                            score: 8.5,
-                            badge: "Action Packed",
-                            badgeColor: "emerald",
-                            recommendationTag: "Watch Extended Highlights",
-                            recommendationDesc: "Relentless wheel-to-wheel duels over 24 laps.",
-                            icon: "play-circle",
-                            community: "89% Agree (750 votes)",
-                            verdict: "Non-stop action from lights out to the checkered flag.",
-                            factors: [
-                                { name: "Overtakes Density", score: "8.5/10", detail: "Continuous draught passing up the hill.", icon: "zap" },
-                                { name: "Weather Chaos", score: "4.0/10", detail: "Dry track with rising wind speeds.", icon: "wind" },
-                                { name: "Safety Car / VSC Drama", score: "7.0/10", detail: "Late VSC created a two-lap dash.", icon: "siren" },
-                                { name: "Strategy & On-Track Battles", score: "7.8/10", detail: "Soft vs Medium tire degradation battles.", icon: "crosshair" }
-                            ]
-                        }
-                    }
-                }
-            ],
-            "2025": [
-                {
-                    id: "2025-lasvegas",
-                    gpName: "Las Vegas Grand Prix",
-                    circuit: "Las Vegas Strip Street Circuit",
-                    date: "Nov 23",
-                    sessions: {
-                        Race: {
-                            score: 8.3,
-                            badge: "Action Packed",
-                            badgeColor: "emerald",
-                            recommendationTag: "Must-Watch Full Race",
-                            recommendationDesc: "High speed slipstreaming and late braking passes throughout.",
-                            icon: "tv",
-                            community: "87% Agree (1,430 votes)",
-                            verdict: "Cold asphalt temperatures caused graining and multiple lead exchanges down the long strip straight.",
-                            factors: [
-                                { name: "Overtakes Density", score: "8.7/10", detail: "Extremely high pass counts into Turn 14 braking zone.", icon: "zap" },
-                                { name: "Weather Chaos", score: "3.0/10", detail: "Dry but low track temperatures affected grip.", icon: "thermometer-snowflake" },
-                                { name: "Safety Car / VSC Drama", score: "7.0/10", detail: "VSC neutralizations compacting pit windows.", icon: "siren" },
-                                { name: "Strategy & On-Track Battles", score: "8.0/10", detail: "Grain management defined stint length variance.", icon: "crosshair" }
-                            ]
-                        }
-                    }
-                },
-                {
-                    id: "2025-hungaroring",
-                    gpName: "Hungarian Grand Prix",
-                    circuit: "Hungaroring",
-                    date: "Jul 21",
-                    sessions: {
-                        Race: {
-                            score: 5.8,
-                            badge: "Decent Race",
-                            badgeColor: "amber",
-                            recommendationTag: "Short Highlights Only",
-                            recommendationDesc: "Strategic undercut battle; modest on-track passing.",
-                            icon: "film",
-                            community: "82% Agree (890 votes)",
-                            verdict: "Tire management dominated this stint-based game of chess. Highlights catch all the pit window drama.",
-                            factors: [
-                                { name: "Overtakes Density", score: "4.5/10", detail: "Passing largely restricted to Turn 1.", icon: "zap" },
-                                { name: "Weather Chaos", score: "1.0/10", detail: "Hot and dry conditions.", icon: "sun" },
-                                { name: "Safety Car / VSC Drama", score: "2.0/10", detail: "Clean race with zero neutralizations.", icon: "shield" },
-                                { name: "Strategy & On-Track Battles", score: "7.5/10", detail: "Aggressive undercuts kept tension high in the pits.", icon: "crosshair" }
-                            ]
-                        }
-                    }
-                }
-            ]
-        };
+        // Initialize Supabase safely
+        const SUPABASE_URL = 'https://ultrinfqyvqbiifzumem.supabase.co';
+        const SUPABASE_ANON_KEY = 'sb_publishable_zTNiZYTDu-M18dMO6ZC3tQ_pLjxomqW';
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        // Application State
-        let currentSeason = "2026";
-        let currentEventId = "2026-bahrain";
-        let currentSession = "Race";
+        let racesData = [];
 
-        window.onload = function() {
-            populateEventDropdown();
-            renderSelectedData();
-            lucide.createIcons();
-        };
-
-        function switchSeason(season) {
-            currentSeason = season;
-            
-            // Toggle season tab UI
-            const btn2026 = document.getElementById('season-2026-btn');
-            const btn2025 = document.getElementById('season-2025-btn');
-
-            if (season === "2026") {
-                btn2026.className = "px-3 py-1.5 rounded-lg bg-f1-red text-white transition shadow-sm";
-                btn2025.className = "px-3 py-1.5 rounded-lg text-gray-400 hover:text-white transition";
-            } else {
-                btn2025.className = "px-3 py-1.5 rounded-lg bg-f1-red text-white transition shadow-sm";
-                btn2026.className = "px-3 py-1.5 rounded-lg text-gray-400 hover:text-white transition";
+        async function loadRacesFromSupabase() {
+            const { data, error } = await supabase.from('races').select('*');
+            if (error) {
+                console.error('Error fetching data:', error);
+                return;
             }
-
-            // Repopulate and pick first event
-            populateEventDropdown();
-            const events = F1_DATABASE[currentSeason];
-            currentEventId = events[0].id;
-            document.getElementById('event-select').value = currentEventId;
-
-            updateSessionTabsAvailability();
-            renderSelectedData();
+            racesData = data;
+            console.log("Fetched races successfully:", racesData);
+            
+            if (racesData.length > 0) {
+                populateUI(racesData);
+            }
         }
 
-        function populateEventDropdown() {
-            const select = document.getElementById('event-select');
-            select.innerHTML = '';
-
-            const events = F1_DATABASE[currentSeason];
-            events.forEach(evt => {
+        function populateUI(races) {
+            const selectEl = document.getElementById('raceSelect');
+            selectEl.innerHTML = '';
+            
+            races.forEach(race => {
                 const opt = document.createElement('option');
-                opt.value = evt.id;
-                opt.textContent = `${evt.gpName} • (${evt.date})`;
-                select.appendChild(opt);
+                opt.value = race.id;
+                opt.textContent = race.title;
+                selectEl.appendChild(opt);
+            });
+
+            // Show first race details by default
+            displayRace(races[0]);
+
+            // Listen for changes
+            selectEl.addEventListener('change', (e) => {
+                const selected = races.find(r => r.id === e.target.value);
+                if (selected) displayRace(selected);
             });
         }
 
-        function onEventOrSessionChange() {
-            currentEventId = document.getElementById('event-select').value;
-            updateSessionTabsAvailability();
-            renderSelectedData();
+        function displayRace(race) {
+            document.getElementById('raceTitle').textContent = race.title;
+            document.getElementById('wiiScoreDisplay').textContent = race.wii_score;
+            document.getElementById('recommendationDisplay').textContent = race.recommendation;
         }
 
-        function selectSession(sessionType) {
-            currentSession = sessionType;
-            updateSessionTabUI();
-            renderSelectedData();
-        }
-
-        function updateSessionTabsAvailability() {
-            const events = F1_DATABASE[currentSeason];
-            const event = events.find(e => e.id === currentEventId) || events[0];
-
-            const availableSessions = Object.keys(event.sessions);
-            
-            // If currently selected session is not present in this event, default to Race
-            if (!availableSessions.includes(currentSession)) {
-                currentSession = availableSessions[0] || "Race";
-            }
-
-            // Update button visual disable states
-            ['Race', 'Sprint', 'Qualifying'].forEach(sType => {
-                const btn = document.getElementById(`session-btn-${sType.toLowerCase()}`);
-                if (availableSessions.includes(sType)) {
-                    btn.disabled = false;
-                    btn.style.opacity = "1";
-                    btn.style.cursor = "pointer";
-                } else {
-                    btn.disabled = true;
-                    btn.style.opacity = "0.3";
-                    btn.style.cursor = "not-allowed";
-                }
-            });
-
-            updateSessionTabUI();
-        }
-
-        function updateSessionTabUI() {
-            ['Race', 'Sprint', 'Qualifying'].forEach(sType => {
-                const btn = document.getElementById(`session-btn-${sType.toLowerCase()}`);
-                if (sType === currentSession) {
-                    btn.className = "py-2.5 rounded-lg bg-f1-red text-white transition font-extrabold shadow";
-                } else {
-                    btn.className = "py-2.5 rounded-lg text-gray-400 hover:text-white transition font-semibold";
-                }
-            });
-        }
-
-        function renderSelectedData() {
-            const events = F1_DATABASE[currentSeason];
-            const event = events.find(e => e.id === currentEventId) || events[0];
-            const data = event.sessions[currentSession];
-
-            if (!data) return;
-
-            // Header info
-            document.getElementById('event-season-badge').textContent = `${currentSeason} Season`;
-            document.getElementById('event-session-badge').textContent = `${currentSession} Session`;
-            document.getElementById('event-title').textContent = event.gpName;
-            document.getElementById('event-circuit').innerHTML = `<i data-lucide="compass" class="w-3.5 h-3.5 text-gray-500"></i> ${event.circuit}`;
-            document.getElementById('event-date').textContent = event.date;
-
-            // WII Score
-            document.getElementById('wii-score').textContent = data.score.toFixed(1);
-
-            // Excitement Badge styling
-            const badgeEl = document.getElementById('excitement-badge');
-            badgeEl.textContent = data.badge;
-            
-            if (data.badgeColor === 'emerald') {
-                badgeEl.className = "px-4 py-1.5 rounded-full text-xs font-extrabold uppercase tracking-wider bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 badge-glow-emerald";
-            } else if (data.badgeColor === 'amber') {
-                badgeEl.className = "px-4 py-1.5 rounded-full text-xs font-extrabold uppercase tracking-wider bg-amber-500/20 text-amber-400 border border-amber-500/40 badge-glow-amber";
-            } else {
-                badgeEl.className = "px-4 py-1.5 rounded-full text-xs font-extrabold uppercase tracking-wider bg-rose-500/20 text-rose-400 border border-rose-500/40 badge-glow-rose";
-            }
-
-            // Recommendation format
-            document.getElementById('recommendation-tag').textContent = data.recommendationTag;
-            document.getElementById('recommendation-desc').textContent = data.recommendationDesc;
-            
-            // Icon update
-            const recIconEl = document.getElementById('recommendation-icon');
-            recIconEl.innerHTML = `<i data-lucide="${data.icon}" class="w-6 h-6"></i>`;
-
-            // Community & Verdict
-            document.getElementById('community-rate').textContent = data.community;
-            document.getElementById('event-verdict').textContent = `"${data.verdict}"`;
-
-            // Render factors
-            const container = document.getElementById('breakdown-container');
-            container.innerHTML = '';
-
-            data.factors.forEach(factor => {
-                const item = document.createElement('div');
-                item.className = "p-3.5 rounded-xl bg-f1-dark/90 border border-f1-border flex items-start gap-3.5 hover:border-gray-700 transition";
-                item.innerHTML = `
-                    <div class="p-2.5 rounded-xl bg-f1-card text-f1-neon border border-f1-border shrink-0 mt-0.5">
-                        <i data-lucide="${factor.icon}" class="w-4.5 h-4.5"></i>
-                    </div>
-                    <div class="flex-grow">
-                        <div class="flex justify-between items-center">
-                            <span class="text-xs font-bold text-white">${factor.name}</span>
-                            <span class="text-xs font-black text-f1-neon font-mono">${factor.score}</span>
-                        </div>
-                        <p class="text-[11px] text-gray-400 mt-1 leading-normal">${factor.detail}</p>
-                    </div>
-                `;
-                container.appendChild(item);
-            });
-
-            // Reset vote buttons & feedback
-            document.getElementById('btn-agree').classList.remove('bg-emerald-500/30', 'text-emerald-400');
-            document.getElementById('btn-disagree').classList.remove('bg-rose-500/30', 'text-rose-400');
-            document.getElementById('vote-thanks').classList.add('hidden');
-
-            lucide.createIcons();
-        }
-
-        function castVote(type) {
-            const btnAgree = document.getElementById('btn-agree');
-            const btnDisagree = document.getElementById('btn-disagree');
-            const thanksMsg = document.getElementById('vote-thanks');
-
-            if (type === 'agree') {
-                btnAgree.classList.add('bg-emerald-500/30', 'text-emerald-400');
-                btnDisagree.classList.remove('bg-rose-500/30', 'text-rose-400');
-            } else {
-                btnDisagree.classList.add('bg-rose-500/30', 'text-rose-400');
-                btnAgree.classList.remove('bg-emerald-500/30', 'text-emerald-400');
-            }
-
-            thanksMsg.classList.remove('hidden');
-        }
+        window.addEventListener('DOMContentLoaded', loadRacesFromSupabase);
     </script>
 </body>
 </html>
