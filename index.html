@@ -2,6 +2,29 @@
 <html lang="en" class="dark">
 <head>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+    // Initialize Supabase
+    const SUPABASE_URL = https://ultrinfqyvqbiifzumem.supabase.com; // Paste your Supabase Project URL
+    const SUPABASE_ANON_KEY = sb_publishable_zTNiZYTDu-M18dMO6ZC3tQ_pLjxomqW; // Paste your Publishable key
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // Global variable for races
+    let racesData = {};
+
+    // Fetch races from Supabase table
+    async function loadRacesFromSupabase() {
+        const { data, error } = await supabase.from('races').select('*');
+        if (error) {
+            console.error('Error fetching data:', error);
+            return;
+        }
+        console.log("Fetched races:", data);
+        // If your database returns data, pass it to your UI rendering function here
+    }
+
+    // Run when page loads
+    window.addEventListener('DOMContentLoaded', loadRacesFromSupabase);
+</script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Was It Interesting? (WII) - F1 Edition</title>
